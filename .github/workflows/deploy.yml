@@ -1,9 +1,7 @@
 name: Deploy to AWS EC2S
-
 on:
   push:
     branches: [ "main" ]
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -24,9 +22,9 @@ jobs:
 
       - name: Build and Push Docker Image
         run: |
-           docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest .
-           docker push ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
-     
+          docker build -t ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest .
+          docker push ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
         with:
@@ -41,4 +39,12 @@ jobs:
             sudo docker pull ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
             sudo docker stop notes-app || true
             sudo docker rm notes-app || true
-            sudo docker run -d --name notes-app -p 8000:8000 ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
+            sudo docker run -d \
+              --name notes-app \
+              --link mysql-db \
+              -e DB_HOST=mysql-db \
+              -e DB_USER=ali \
+              -e DB_PASSWORD=ali123 \
+              -e DB_NAME=notesdb \
+              -p 8000:8000 \
+              ${{ steps.login-ecr.outputs.registry }}/${{ secrets.ECR_REPOSITORY }}:latest
