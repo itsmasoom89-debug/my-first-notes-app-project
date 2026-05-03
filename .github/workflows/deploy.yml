@@ -21,13 +21,11 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v1
 
       - name: Build and Push Docker Image
-        env:
-          REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          REPO: ${{ secrets.ECR_REPOSITORY }}
-          DOCKER_BUILDKIT: 0
         run: |
-          docker build -t $REGISTRY/$REPO:latest .
-          docker push $REGISTRY/$REPO:latest
+          export REGISTRY=${{ steps.login-ecr.outputs.registry }}
+          export REPO=${{ secrets.ECR_REPOSITORY }}
+          DOCKER_BUILDKIT=0 docker build -t ${REGISTRY}/${REPO}:latest .
+          docker push ${REGISTRY}/${REPO}:latest
 
       - name: Deploy to EC2
         uses: appleboy/ssh-action@master
